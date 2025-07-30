@@ -1,1 +1,5 @@
 Flask 
+requests
+zipfile
+base64
+werkzeug
