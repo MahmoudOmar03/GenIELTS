@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenIELTS - Listening</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="header" style="display:flex;align-items:center;justify-content:center;">
+        <a href="/" class="brand" style="text-decoration:none;color:#2029d9;font-weight:700;">GenIELTS</a>
+    </div>
+    <div class="chat-container fullpage" style="margin-top:48px;">
+        <div class="chat-window">
+            <div class="chat-bubble bot shimmer-box" style="background:#181c2f;color:#fff;box-shadow:0 2px 8px rgba(25,118,210,0.10);border-radius:14px;min-width:600px;max-width:1000px;min-height:320px;padding:64px 64px 64px 64px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+                <span class="icon" style="position:absolute;left:32px;top:32px;"><i class="fas fa-headphones"></i></span>
+                <div style="width:100%;display:flex;align-items:center;justify-content:center;">
+                    <form class="listening-form" method="post" style="margin:0;width:100%;max-width:1000px;display:flex;flex-direction:column;gap:24px;align-items:stretch;">
+                        <div style="display:flex;gap:16px;align-items:center;">
+                            <div style="flex:1;">
+                                <label for="topic" style="color:#fff;display:block;margin-bottom:8px;">Topic:</label>
+                                <input type="text" id="topic" name="topic" placeholder="Enter topic..." style="color:#1976d2;background:#fff;width:100%;font-size:1.1rem;padding:16px;border-radius:12px;border:none;">
+                            </div>
+                            <div style="flex:1;">
+                                <label for="part" style="color:#fff;display:block;margin-bottom:8px;">Listening Part:</label>
+                                <select id="part" name="part" style="color:#1976d2;background:#fff;width:100%;font-size:1.1rem;padding:16px;border-radius:12px;border:none;">
+                                    <option value="1">Part 1 - Social Context</option>
+                                    <option value="2">Part 2 - Monologue</option>
+                                    <option value="3">Part 3 - Academic Discussion</option>
+                                    <option value="4">Part 4 - Academic Lecture</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" style="background:#fff;color:#1976d2;font-weight:700;border-radius:24px;width:100%;font-size:1.2rem;padding:18px 0;">Generate Listening</button>
+                    </form>
+                </div>
+            </div>
+            <div style="max-width:1000px;width:100%;margin:32px auto 0 auto;display:flex;flex-direction:column;align-items:flex-end;">
+                <div class="chat-bubble bot" style="max-width:1200px;min-width:600px;width:100%;display:flex;align-items:center;justify-content:center;">
+                    <span class="icon"><i class="fas fa-volume-up"></i></span>
+                    <span class="bot-label">Audio will appear here (to be added).</span>
+                </div>
+                <div class="chat-bubble bot" style="margin-top:32px;max-width:1200px;min-width:600px;width:100%;display:flex;align-items:center;justify-content:center;">
+                    <span class="icon"><i class="fas fa-question-circle"></i></span>
+                    <span class="bot-label">Questions will appear here (to be added).</span>
+                </div>
+            </div>
+            
+            <!-- Loading indicator -->
+            <div id="loading-container" style="display: none; max-width:1000px;width:100%;margin:32px auto 0 auto;">
+                <div class="chat-bubble bot" style="max-width:1200px;min-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                        <i class="fas fa-cog fa-spin" style="color: #1976d2; font-size: 24px;"></i>
+                        <span style="font-size: 18px; font-weight: 600; color: #1976d2;">Generating Listening Audio...</span>
+                    </div>
+                    <div style="text-align: center; color: #888; font-size: 14px; line-height: 1.5;">
+                        Creating audio content for your selected topic and part.<br>
+                        This may take a few moments...
+                    </div>
+                    <div style="margin-top: 20px; width: 200px; height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
+                        <div id="progress-bar" style="width: 0%; height: 100%; background: #1976d2; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+            {% if audio_url %}
+            <div id="audio-container" style="max-width:1000px;width:100%;margin:32px auto 0 auto;display:flex;flex-direction:column;align-items:center;">
+                <div class="chat-bubble bot" style="max-width:1200px;min-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+                    <div style="display:flex;align-items:center;margin-bottom:16px;">
+                        <span class="icon"><i class="fas fa-volume-up"></i></span>
+                        <span style="margin-left:16px;font-weight:600;color:#1976d2;">IELTS Listening Audio</span>
+                        <i class="fas fa-check-circle" style="margin-left:8px;color:#4caf50;font-size:18px;"></i>
+                    </div>
+                    <audio controls style="width:100%;max-width:600px;margin-bottom:16px;">
+                        <source src="{{ audio_url }}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                    <div style="display:flex;gap:16px;align-items:center;">
+                        <a href="{{ audio_url }}" download="ielts_listening.wav" style="background:#1976d2;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
+                            <i class="fas fa-download" style="margin-right:8px;"></i>
+                            Download Audio
+                        </a>
+                        <button onclick="resetForm()" style="background:#4caf50;color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;">
+                            <i class="fas fa-plus" style="margin-right:8px;"></i>
+                            Generate New Audio
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+            // Add success animation when audio is loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                const audioContainer = document.getElementById('audio-container');
+                if (audioContainer) {
+                    audioContainer.style.opacity = '0';
+                    audioContainer.style.transform = 'translateY(20px)';
+                    audioContainer.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    
+                    setTimeout(() => {
+                        audioContainer.style.opacity = '1';
+                        audioContainer.style.transform = 'translateY(0)';
+                    }, 100);
+                }
+            });
+            </script>
+            {% endif %}
+            
+            {% if transcript %}
+            <div style="max-width:1000px;width:100%;margin:32px auto 0 auto;">
+                <div class="chat-bubble bot" style="max-width:1200px;min-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:rgba(255,193,7,0.1);border-left:4px solid #ffc107;">
+                    <div style="display:flex;align-items:center;margin-bottom:16px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#ffc107;font-size:24px;margin-right:12px;"></i>
+                        <span style="font-weight:600;color:#ffc107;">Warning</span>
+                    </div>
+                    <div style="text-align:center;color:#ffc107;line-height:1.5;margin-bottom:16px;">
+                        {{ warning }}
+                    </div>
+                    <div style="background:rgba(255,255,255,0.1);padding:20px;border-radius:8px;width:100%;max-width:600px;">
+                        <div style="font-weight:600;margin-bottom:12px;color:#fff;">Transcript:</div>
+                        <div style="white-space:pre-wrap;line-height:1.6;color:#fff;text-align:left;">
+                            {{ transcript }}
+                        </div>
+                    </div>
+                    <button onclick="resetForm()" style="background:#ffc107;color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;margin-top:16px;">
+                        <i class="fas fa-redo" style="margin-right:8px;"></i>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if error_message %}
+            <div style="max-width:1000px;width:100%;margin:32px auto 0 auto;">
+                <div class="chat-bubble bot" style="max-width:1200px;min-width:600px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:rgba(255,107,107,0.1);border-left:4px solid #ff6b6b;">
+                    <div style="display:flex;align-items:center;margin-bottom:16px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#ff6b6b;font-size:24px;margin-right:12px;"></i>
+                        <span style="font-weight:600;color:#ff6b6b;">Error</span>
+                    </div>
+                    <div style="text-align:center;color:#ff6b6b;line-height:1.5;">
+                        {{ error_message }}
+                    </div>
+                    <button onclick="resetForm()" style="background:#ff6b6b;color:white;border:none;padding:12px 24px;border-radius:8px;font-weight:600;cursor:pointer;margin-top:16px;">
+                        <i class="fas fa-redo" style="margin-right:8px;"></i>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+    function resetForm() {
+        // Clear form fields
+        document.getElementById('topic').value = '';
+        document.getElementById('part').value = '1';
+        
+        // Hide audio section
+        const audioSection = document.querySelector('.chat-bubble.bot[style*="max-width:1200px"]');
+        if (audioSection) {
+            audioSection.style.display = 'none';
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Add form validation and loading indicator
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.listening-form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const loadingContainer = document.getElementById('loading-container');
+        const progressBar = document.getElementById('progress-bar');
+        
+        form.addEventListener('submit', function(e) {
+            const topic = document.getElementById('topic').value.trim();
+            
+            if (!topic) {
+                e.preventDefault();
+                alert('Please enter a topic for the listening exercise.');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Generating...';
+            
+            // Show loading indicator
+            loadingContainer.style.display = 'block';
+            
+            // Animate progress bar
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90; // Don't go to 100% until complete
+                progressBar.style.width = progress + '%';
+            }, 500);
+            
+            // Hide loading indicator when page reloads (form submission)
+            // The loading will be hidden when the page reloads with the result
+            
+            // Re-enable after a delay (in case of error)
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Listening';
+                loadingContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                clearInterval(progressInterval);
+            }, 30000); // 30 second timeout
+        });
+    });
+    </script>
+</body>
+</html> 

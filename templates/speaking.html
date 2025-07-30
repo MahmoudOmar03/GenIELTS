@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenIELTS - Interactive Speaking Practice</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .setup-container {
+            background: #232526;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 600px;
+            color: #f5f7fa;
+        }
+        .conversation-container {
+            display: none;
+            background: #232526;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            color: #f5f7fa;
+        }
+        .examiner-message {
+            background: #2b313d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #1976d2;
+        }
+        .candidate-message {
+            background: #2b313d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        .feedback-message {
+            background: #2b313d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #ff9800;
+        }
+        .recording-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .record-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        .record-btn.recording {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+        .record-btn:hover {
+            transform: scale(1.1);
+        }
+        .record-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #f5f7fa;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: #2b313d;
+            color: #f5f7fa;
+            font-size: 16px;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+        .btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1565c0;
+        }
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .loading {
+            text-align: center;
+            color: #bcbcbc;
+            font-style: italic;
+            margin: 20px 0;
+        }
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4caf50;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .conversation-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .progress-indicator {
+            text-align: center;
+            margin: 15px 0;
+            color: #bcbcbc;
+        }
+        .grammar-feedback {
+            background: #1e3a5f;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .lexical-feedback {
+            background: #1e3a1e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .pronunciation-feedback {
+            background: #3a1e3a;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .pronunciation-word {
+            background: #2b1e2b;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 3px solid #ff9800;
+        }
+        
+        .pronunciation-details {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .expected-pronunciation {
+            color: #4caf50;
+        }
+        
+        .heard-pronunciation {
+            color: #ff6b6b;
+        }
+        
+        .error-clips-section {
+            background: #1e3a3a;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .error-clip-item {
+            background: #2b1e1e;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .error-clip-audio {
+            width: 100%;
+            height: 40px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header" style="display:flex;align-items:center;justify-content:center;">
+        <a href="/" class="brand" style="text-decoration:none;color:#2029d9;font-weight:700;">GenIELTS</a>
+    </div>
+    
+    <div class="chat-container fullpage" style="margin-top:0; padding-bottom:0;">
+        <div class="chat-window" style="margin-top:0;">
+            
+            <!-- Setup Section -->
+            <div id="setup-section" class="setup-container">
+                <h2><i class="fas fa-cog"></i> IELTS Speaking Practice Setup</h2>
+                
+                <div class="form-group">
+                    <label for="part-select">Choose IELTS Speaking Part:</label>
+                    <select id="part-select" required>
+                        <option value="">Select a part...</option>
+                        <option value="1">Part 1 - Introduction & Interview (4-5 minutes)</option>
+                        <option value="2">Part 2 - Individual Long Turn (3-4 minutes)</option>
+                        <option value="3">Part 3 - Two-Way Discussion (4-5 minutes)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="topic-choice">Topic Selection:</label>
+                    <select id="topic-choice" required>
+                        <option value="">Choose topic option...</option>
+                        <option value="auto">Let AI choose topic automatically</option>
+                        <option value="custom">I want to specify a topic</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="custom-topic-group" style="display: none;">
+                    <label for="custom-topic">Enter your topic:</label>
+                    <input type="text" id="custom-topic" placeholder="e.g., Technology, Travel, Education, etc.">
+                </div>
+                
+                <div style="text-align: center;">
+                    <button id="start-btn" class="btn" disabled>
+                        <i class="fas fa-play"></i> Start Speaking Practice
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Conversation Section -->
+            <div id="conversation-section" class="conversation-container">
+                <div class="conversation-controls">
+                    <button id="end-btn" class="btn btn-secondary">
+                        <i class="fas fa-stop"></i> End Practice
+                    </button>
+                </div>
+                
+                <div id="conversation-messages">
+                    <!-- Messages will be added here dynamically -->
+                </div>
+                
+                <div id="recording-section" class="recording-container">
+                    <div class="progress-indicator" id="progress-indicator">
+                        Waiting for examiner question...
+                    </div>
+                    
+                    <button id="recordBtn" class="record-btn" title="Start Recording" disabled>
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <p id="recording-instruction">Click to record your response</p>
+                    <div id="recordingStatus"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let currentPart = null;
+        let currentTopic = null;
+        let conversationMemory = {};
+        let questionCount = 0;
+        let maxQuestions = 12; // Default for Part 1
+        
+        // DOM elements
+        const setupSection = document.getElementById('setup-section');
+        const conversationSection = document.getElementById('conversation-section');
+        const partSelect = document.getElementById('part-select');
+        const topicChoice = document.getElementById('topic-choice');
+        const customTopicGroup = document.getElementById('custom-topic-group');
+        const customTopicInput = document.getElementById('custom-topic');
+        const startBtn = document.getElementById('start-btn');
+        const endBtn = document.getElementById('end-btn');
+        const recordBtn = document.getElementById('recordBtn');
+        const conversationMessages = document.getElementById('conversation-messages');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const recordingInstruction = document.getElementById('recording-instruction');
+        const recordingStatus = document.getElementById('recordingStatus');
+        
+        // Event listeners
+        partSelect.addEventListener('change', validateSetup);
+        topicChoice.addEventListener('change', handleTopicChoice);
+        customTopicInput.addEventListener('input', validateSetup);
+        startBtn.addEventListener('click', startConversation);
+        endBtn.addEventListener('click', endConversation);
+        recordBtn.addEventListener('click', toggleRecording);
+        
+        function handleTopicChoice() {
+            if (topicChoice.value === 'custom') {
+                customTopicGroup.style.display = 'block';
+            } else {
+                customTopicGroup.style.display = 'none';
+                customTopicInput.value = '';
+            }
+            validateSetup();
+        }
+        
+        function validateSetup() {
+            const partValid = partSelect.value !== '';
+            const topicValid = topicChoice.value !== '';
+            const customTopicValid = topicChoice.value !== 'custom' || customTopicInput.value.trim() !== '';
+            
+            startBtn.disabled = !(partValid && topicValid && customTopicValid);
+        }
+        
+        async function startConversation() {
+            currentPart = parseInt(partSelect.value);
+            currentTopic = topicChoice.value === 'custom' ? customTopicInput.value.trim() : null;
+            
+            // Set max questions based on part
+            if (currentPart === 1) maxQuestions = 12;
+            else if (currentPart === 2) maxQuestions = 1;
+            else if (currentPart === 3) maxQuestions = 8;
+            
+            setupSection.style.display = 'none';
+            conversationSection.style.display = 'block';
+            
+            // Start the conversation
+            await getNextQuestion();
+        }
+        
+        async function getNextQuestion() {
+            if (questionCount >= maxQuestions) {
+                endConversation();
+                return;
+            }
+            
+            progressIndicator.textContent = 'Getting examiner question...';
+            recordBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/get_ielts_question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        part: currentPart,
+                        topic: currentTopic,
+                        memory: conversationMemory
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update conversation memory
+                    conversationMemory = data.memory || conversationMemory;
+                    
+                    // Handle question format: ["question text", "topic"]
+                    let questionText = data.question;
+                    if (Array.isArray(data.question)) {
+                        questionText = data.question[0]; // Take the first element (the question text)
+                        console.log('Question topic:', data.question[1]); // Log the topic
+                    }
+                    
+                    // Add examiner message
+                    addMessage('examiner', questionText);
+                    
+                    // Add Best Answer button after the question
+                    addBestAnswerButton(questionText);
+                    
+                    // Debug: Log the response data
+                    console.log('Full response data:', data);
+                    console.log('Question audio available:', !!data.question_audio);
+                    console.log('Question audio length:', data.question_audio ? data.question_audio.length : 'N/A');
+                    
+                    // Play the question as speech with visible player
+                    if (data.question_audio_chunks) {
+                        try {
+                            console.log(`Playing question audio from TTS - ${data.question_audio_chunks.length} chunks`);
+                            
+                            // Create visible audio player for chunks
+                            const audioPlayerDiv = document.createElement('div');
+                            audioPlayerDiv.className = 'audio-player';
+                            audioPlayerDiv.innerHTML = `
+                                <div class="message examiner-message">
+                                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="fas fa-volume-up" style="margin-right: 10px; color: #1976d2;"></i>
+                                        <strong>Question Audio (${data.question_audio_chunks.length} parts)</strong>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Create audio players for each chunk
+                            for (let i = 0; i < data.question_audio_chunks.length; i++) {
+                                const chunk = data.question_audio_chunks[i];
+                                
+                                // Convert base64 string back to blob
+                                const audioBytes = atob(chunk);
+                                const audioArray = new Uint8Array(audioBytes.length);
+                                for (let j = 0; j < audioBytes.length; j++) {
+                                    audioArray[j] = audioBytes.charCodeAt(j);
+                                }
+                                
+                                const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                                const audioUrl = URL.createObjectURL(audioBlob);
+                                
+                                const chunkDiv = document.createElement('div');
+                                chunkDiv.style.border = '1px solid #e9ecef';
+                                chunkDiv.style.borderRadius = '8px';
+                                chunkDiv.style.padding = '15px';
+                                chunkDiv.style.margin = '10px 0';
+                                chunkDiv.innerHTML = `
+                                    <div style="margin-bottom: 8px; font-weight: bold; color: #666;">
+                                        Part ${i + 1} of ${data.question_audio_chunks.length}
+                                    </div>
+                                    <audio controls style="width: 100%; height: 40px;">
+                                        <source src="${audioUrl}" type="audio/wav">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                `;
+                                
+                                audioPlayerDiv.appendChild(chunkDiv);
+                            }
+                            
+                            // Add the audio player to the conversation
+                            conversationMessages.appendChild(audioPlayerDiv);
+                            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                            
+                            // Auto-play the first chunk after 3 seconds
+                            setTimeout(() => {
+                                const firstAudioElement = audioPlayerDiv.querySelector('audio');
+                                if (firstAudioElement) {
+                                    firstAudioElement.play().then(() => {
+                                        console.log('Question audio chunk 1 auto-played successfully');
+                                    }).catch(error => {
+                                        console.error('Auto-play failed:', error);
+                                        console.log('User interaction required for audio playback');
+                                    });
+                                }
+                            }, 3000);
+                            
+                            console.log('Question audio player created and auto-play scheduled');
+                        } catch (error) {
+                            console.error('Error creating question audio player:', error);
+                            console.log('Question audio failed, showing text only');
+                        }
+                    } else if (data.question_audio) {
+                        try {
+                            console.log('Playing question audio from TTS');
+                            console.log('Audio data type:', typeof data.question_audio);
+                            console.log('Audio data length:', data.question_audio.length);
+                            
+                            // Convert base64 string back to blob
+                            const audioBytes = atob(data.question_audio);
+                            console.log('Decoded audio bytes length:', audioBytes.length);
+                            
+                            const audioArray = new Uint8Array(audioBytes.length);
+                            for (let i = 0; i < audioBytes.length; i++) {
+                                audioArray[i] = audioBytes.charCodeAt(i);
+                            }
+                            console.log('Audio array length:', audioArray.length);
+                            
+                            const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                            console.log('Audio blob size:', audioBlob.size);
+                            
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            console.log('Audio URL created:', audioUrl);
+                            
+                            // Create visible audio player
+                            const audioPlayerDiv = document.createElement('div');
+                            audioPlayerDiv.className = 'audio-player';
+                            audioPlayerDiv.innerHTML = `
+                                <div class="message examiner-message">
+                                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="fas fa-volume-up" style="margin-right: 10px; color: #1976d2;"></i>
+                                        <strong>Question Audio</strong>
+                                    </div>
+                                    <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                                        <audio controls style="width: 100%; height: 40px;">
+                                            <source src="${audioUrl}" type="audio/wav">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Add the audio player to the conversation
+                            conversationMessages.appendChild(audioPlayerDiv);
+                            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                            
+                            // Auto-play after 3 seconds
+                            setTimeout(() => {
+                                const audioElement = audioPlayerDiv.querySelector('audio');
+                                if (audioElement) {
+                                    audioElement.play().then(() => {
+                                        console.log('Question audio auto-played successfully');
+                                    }).catch(error => {
+                                        console.error('Auto-play failed:', error);
+                                        console.log('User interaction required for audio playback');
+                                    });
+                                }
+                            }, 3000);
+                            
+                            console.log('Question audio player created and auto-play scheduled');
+                        } catch (error) {
+                            console.error('Error creating question audio player:', error);
+                            console.log('Question audio failed, showing text only');
+                        }
+                    } else {
+                        console.log('No question audio available');
+                    }
+                    
+                    // Enable recording for user response
+                    recordBtn.disabled = false;
+                    progressIndicator.textContent = `Question ${questionCount + 1} of ${maxQuestions}`;
+                    recordingInstruction.textContent = 'Click to record your response';
+                    
+                } else {
+                    throw new Error('Failed to get question');
+                }
+            } catch (error) {
+                console.error('Error getting question:', error);
+                progressIndicator.textContent = 'Error getting question. Please try again.';
+                recordBtn.disabled = false;
+            }
+        }
+        
+
+        
+        function addMessage(type, content, feedback = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message`;
+            
+            let icon, title;
+            switch(type) {
+                case 'examiner':
+                    icon = 'fas fa-user-tie';
+                    title = 'Examiner';
+                    break;
+                case 'candidate':
+                    icon = 'fas fa-user';
+                    title = 'You';
+                    break;
+                case 'feedback':
+                    icon = 'fas fa-chart-line';
+                    title = 'Feedback';
+                    break;
+            }
+            
+            let html = `<div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="${icon}" style="margin-right: 10px; color: #1976d2;"></i>
+                <strong>${title}</strong>
+            </div>`;
+            
+            if (type === 'feedback' && feedback) {
+                html += `
+                    <div class="grammar-feedback">
+                        <strong><i class="fas fa-language"></i> Grammar:</strong> ${feedback.grammar}
+                    </div>
+                    <div class="lexical-feedback">
+                        <strong><i class="fas fa-book"></i> Vocabulary:</strong> ${feedback.lexical}
+                    </div>
+                `;
+            } else {
+                html += `<div>${content}</div>`;
+            }
+            
+            messageDiv.innerHTML = html;
+            conversationMessages.appendChild(messageDiv);
+            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+        }
+        
+        function addPronunciationFeedback(pronunciationData) {
+            if (!pronunciationData || pronunciationData.length === 0) return;
+            
+            const pronunciationDiv = document.createElement('div');
+            pronunciationDiv.className = 'message feedback-message';
+            
+            let html = `<div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-microphone" style="margin-right: 10px; color: #ff9800;"></i>
+                <strong>Pronunciation Feedback</strong>
+            </div>
+            <div class="pronunciation-feedback">
+                <strong><i class="fas fa-volume-up"></i> Mispronounced Words:</strong>`;
+            
+            pronunciationData.forEach((wordData, index) => {
+                html += `
+                    <div class="pronunciation-word">
+                        <div style="font-weight: bold; margin-bottom: 8px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i>
+                            Word: "${wordData.word}"
+                        </div>
+                        <div class="pronunciation-details">
+                            <span class="expected-pronunciation">
+                                <i class="fas fa-check"></i> Expected: ${wordData.expected}
+                            </span>
+                            <span class="heard-pronunciation">
+                                <i class="fas fa-times"></i> Heard: ${wordData.heard}
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; color: #bcbcbc; margin-top: 5px;">
+                            Time: ${wordData.start_ms}ms - ${wordData.end_ms}ms
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            pronunciationDiv.innerHTML = html;
+            conversationMessages.appendChild(pronunciationDiv);
+            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+        }
+        
+        function addErrorClipsSection(zipUrl) {
+            if (!zipUrl) return;
+            
+            const errorClipsDiv = document.createElement('div');
+            errorClipsDiv.className = 'message feedback-message';
+            
+            let html = `<div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <i class="fas fa-download" style="margin-right: 10px; color: #ff6b6b;"></i>
+                <strong>Error Clips Available</strong>
+            </div>
+            <div class="error-clips-section">
+                <p><i class="fas fa-info-circle"></i> Error clips are available for download to help you practice pronunciation.</p>
+                <button onclick="downloadErrorClips('${zipUrl}')" class="btn" style="margin-top: 10px;">
+                    <i class="fas fa-download"></i> Download Error Clips
+                </button>
+            </div>`;
+            
+            errorClipsDiv.innerHTML = html;
+            conversationMessages.appendChild(errorClipsDiv);
+            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+        }
+        
+        function downloadErrorClips(zipUrl) {
+            // Create a temporary link to download the zip file
+            const link = document.createElement('a');
+            link.href = `https://a924a96d02f0.ngrok-free.app${zipUrl}`;
+            link.download = 'error_clips.zip';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function addBestAnswerButton(questionText) {
+            const bestAnswerDiv = document.createElement('div');
+            bestAnswerDiv.className = 'message examiner-message';
+            bestAnswerDiv.style.marginTop = '10px';
+            
+            // Create the button element
+            const button = document.createElement('button');
+            button.className = 'btn';
+            button.style.background = '#28a745';
+            button.style.margin = '0';
+            button.innerHTML = '<i class="fas fa-star"></i> Show Best Answer';
+            
+            // Add click event listener
+            button.addEventListener('click', () => {
+                getBestAnswer(questionText);
+            });
+            
+            // Create the container div
+            const containerDiv = document.createElement('div');
+            containerDiv.style.display = 'flex';
+            containerDiv.style.alignItems = 'center';
+            containerDiv.style.justifyContent = 'center';
+            containerDiv.style.margin = '10px 0';
+            containerDiv.appendChild(button);
+            
+            bestAnswerDiv.appendChild(containerDiv);
+            conversationMessages.appendChild(bestAnswerDiv);
+            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+        }
+        
+        async function getBestAnswer(questionText) {
+            console.log('getBestAnswer called with question:', questionText);
+            console.log('currentPart:', currentPart);
+            
+            try {
+                // Show loading state
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message feedback-message';
+                loadingDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-spinner fa-spin" style="margin-right: 10px; color: #1976d2;"></i>
+                        <strong>Generating Best Answer...</strong>
+                    </div>
+                `;
+                conversationMessages.appendChild(loadingDiv);
+                conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                
+                const requestBody = {
+                    question: questionText,
+                    part: currentPart
+                };
+                console.log('Sending request to /best_answer with body:', requestBody);
+                
+                const response = await fetch('/best_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                // Remove loading message
+                conversationMessages.removeChild(loadingDiv);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Add best answer message
+                    const bestAnswerDiv = document.createElement('div');
+                    bestAnswerDiv.className = 'message feedback-message';
+                    
+                    // Create the header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.style.display = 'flex';
+                    headerDiv.style.alignItems = 'center';
+                    headerDiv.style.marginBottom = '10px';
+                    headerDiv.innerHTML = `
+                        <i class="fas fa-star" style="margin-right: 10px; color: #ffd700;"></i>
+                        <strong>Best Answer</strong>
+                    `;
+                    
+                    // Create the content container
+                    const contentDiv = document.createElement('div');
+                    contentDiv.style.background = '#2b1e2b';
+                    contentDiv.style.borderRadius = '8px';
+                    contentDiv.style.padding = '15px';
+                    contentDiv.style.margin = '10px 0';
+                    contentDiv.style.borderLeft = '4px solid #ffd700';
+                    
+                    // Create the introduction text
+                    const introDiv = document.createElement('div');
+                    introDiv.style.fontStyle = 'italic';
+                    introDiv.style.color = '#bcbcbc';
+                    introDiv.style.marginBottom = '10px';
+                    introDiv.innerHTML = `
+                        <i class="fas fa-lightbulb"></i> Here's an excellent answer to this question:
+                    `;
+                    
+                    // Create the answer text
+                    const answerDiv = document.createElement('div');
+                    answerDiv.style.lineHeight = '1.6';
+                    answerDiv.textContent = data.answer;
+                    
+                    // Create the button container
+                    const buttonContainerDiv = document.createElement('div');
+                    buttonContainerDiv.style.marginTop = '15px';
+                    buttonContainerDiv.style.textAlign = 'center';
+                    
+                    // Create the button
+                    const speechButton = document.createElement('button');
+                    speechButton.className = 'btn';
+                    speechButton.style.background = '#1976d2';
+                    speechButton.style.margin = '0';
+                    speechButton.innerHTML = '<i class="fas fa-volume-up"></i> Play as Speech';
+                    
+                    // Add click event listener
+                    speechButton.addEventListener('click', () => {
+                        playBestAnswerAsSpeech(data.answer);
+                    });
+                    
+                    // Assemble the elements
+                    buttonContainerDiv.appendChild(speechButton);
+                    contentDiv.appendChild(introDiv);
+                    contentDiv.appendChild(answerDiv);
+                    contentDiv.appendChild(buttonContainerDiv);
+                    bestAnswerDiv.appendChild(headerDiv);
+                    bestAnswerDiv.appendChild(contentDiv);
+                    
+                    conversationMessages.appendChild(bestAnswerDiv);
+                    conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                    
+                } else {
+                    throw new Error('Failed to get best answer');
+                }
+            } catch (error) {
+                console.error('Error getting best answer:', error);
+                
+                // Remove loading message if it exists
+                const loadingMessages = conversationMessages.querySelectorAll('.message');
+                const lastMessage = loadingMessages[loadingMessages.length - 1];
+                if (lastMessage && lastMessage.innerHTML.includes('Generating Best Answer')) {
+                    conversationMessages.removeChild(lastMessage);
+                }
+                
+                // Add error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message feedback-message';
+                errorDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 10px; color: #ff6b6b;"></i>
+                        <strong>Error</strong>
+                    </div>
+                    <div style="color: #ff6b6b;">
+                        Failed to generate best answer. Please try again.
+                    </div>
+                `;
+                
+                conversationMessages.appendChild(errorDiv);
+                conversationMessages.scrollTop = conversationMessages.scrollHeight;
+            }
+        }
+        
+        async function playBestAnswerAsSpeech(answerText) {
+            try {
+                console.log('Converting best answer to speech:', answerText);
+                
+                // Show loading state for TTS
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message feedback-message';
+                loadingDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-spinner fa-spin" style="margin-right: 10px; color: #1976d2;"></i>
+                        <strong>Generating Speech...</strong>
+                    </div>
+                `;
+                conversationMessages.appendChild(loadingDiv);
+                conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                
+                // Call the TTS API through our Flask backend
+                const response = await fetch('/generate_tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: answerText
+                    })
+                });
+                
+                // Remove loading message
+                conversationMessages.removeChild(loadingDiv);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('TTS Response data:', data);
+                    console.log('TTS Response keys:', Object.keys(data));
+                    
+                    if (data.audio_chunks) {
+                        // Handle multiple audio chunks
+                        console.log(`Received ${data.audio_chunks.length} audio chunks`);
+                        
+                        // Create audio player for each chunk
+                        const audioPlayerDiv = document.createElement('div');
+                        audioPlayerDiv.className = 'message feedback-message';
+                        audioPlayerDiv.innerHTML = `
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-volume-up" style="margin-right: 10px; color: #ffd700;"></i>
+                                <strong>Best Answer Audio (${data.audio_chunks.length} parts)</strong>
+                            </div>
+                        `;
+                        
+                        // Create audio players for each chunk
+                        for (let i = 0; i < data.audio_chunks.length; i++) {
+                            const chunk = data.audio_chunks[i];
+                            
+                            // Convert base64 string back to blob
+                            const audioBytes = atob(chunk);
+                            const audioArray = new Uint8Array(audioBytes.length);
+                            for (let j = 0; j < audioBytes.length; j++) {
+                                audioArray[j] = audioBytes.charCodeAt(j);
+                            }
+                            
+                            const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            
+                            const chunkDiv = document.createElement('div');
+                            chunkDiv.style.border = '1px solid #e9ecef';
+                            chunkDiv.style.borderRadius = '8px';
+                            chunkDiv.style.padding = '15px';
+                            chunkDiv.style.margin = '10px 0';
+                            chunkDiv.innerHTML = `
+                                <div style="margin-bottom: 8px; font-weight: bold; color: #666;">
+                                    Part ${i + 1} of ${data.audio_chunks.length}
+                                </div>
+                                <audio controls style="width: 100%; height: 40px;">
+                                    <source src="${audioUrl}" type="audio/wav">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            `;
+                            
+                            audioPlayerDiv.appendChild(chunkDiv);
+                        }
+                        
+                        conversationMessages.appendChild(audioPlayerDiv);
+                        conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                        
+                        // Auto-play the first audio chunk
+                        setTimeout(() => {
+                            const firstAudioElement = audioPlayerDiv.querySelector('audio');
+                            if (firstAudioElement) {
+                                firstAudioElement.play().then(() => {
+                                    console.log('Best answer audio chunk 1 auto-played successfully');
+                                }).catch(error => {
+                                    console.error('Auto-play failed:', error);
+                                });
+                            }
+                        }, 1000);
+                        
+                    } else if (data.audio) {
+                        // Handle single audio chunk
+                        const audioBytes = atob(data.audio);
+                        const audioArray = new Uint8Array(audioBytes.length);
+                        for (let i = 0; i < audioBytes.length; i++) {
+                            audioArray[i] = audioBytes.charCodeAt(i);
+                        }
+                        
+                        const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        
+                        // Create audio player for the best answer speech
+                        const audioPlayerDiv = document.createElement('div');
+                        audioPlayerDiv.className = 'message feedback-message';
+                        audioPlayerDiv.innerHTML = `
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-volume-up" style="margin-right: 10px; color: #ffd700;"></i>
+                                <strong>Best Answer Audio</strong>
+                            </div>
+                            <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                                <audio controls style="width: 100%; height: 40px;">
+                                    <source src="${audioUrl}" type="audio/wav">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+                        `;
+                        
+                        conversationMessages.appendChild(audioPlayerDiv);
+                        conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                        
+                        // Auto-play the audio
+                        setTimeout(() => {
+                            const audioElement = audioPlayerDiv.querySelector('audio');
+                            if (audioElement) {
+                                audioElement.play().then(() => {
+                                    console.log('Best answer audio auto-played successfully');
+                                }).catch(error => {
+                                    console.error('Auto-play failed:', error);
+                                });
+                            }
+                        }, 1000);
+                        
+                    } else {
+                        console.error('No audio data in response:', data);
+                        throw new Error('No audio data received');
+                    }
+                    
+                } else {
+                    const errorText = await response.text();
+                    console.error('TTS API error response:', errorText);
+                    throw new Error(`Failed to generate speech: ${response.status} - ${errorText}`);
+                }
+                
+            } catch (error) {
+                console.error('Error generating speech for best answer:', error);
+                
+                // Remove loading message if it exists
+                const loadingMessages = conversationMessages.querySelectorAll('.message');
+                const lastMessage = loadingMessages[loadingMessages.length - 1];
+                if (lastMessage && lastMessage.innerHTML.includes('Generating Speech')) {
+                    conversationMessages.removeChild(lastMessage);
+                }
+                
+                // Add error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message feedback-message';
+                errorDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 10px; color: #ff6b6b;"></i>
+                        <strong>Speech Generation Error</strong>
+                    </div>
+                    <div style="color: #ff6b6b;">
+                        Failed to convert best answer to speech. Please try again.
+                    </div>
+                `;
+                
+                conversationMessages.appendChild(errorDiv);
+                conversationMessages.scrollTop = conversationMessages.scrollHeight;
+            }
+        }
+        
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    // MediaRecorder typically creates webm/mp4, but API expects WAV
+                    // We'll send it as-is and let the backend handle conversion
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await processUserResponse(audioBlob);
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                recordingStatus.innerHTML = '<p style="color: #ff6b6b;">Recording... Click to stop</p>';
+                
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                recordingStatus.innerHTML = '<p class="error">Error accessing microphone. Please allow microphone access.</p>';
+            }
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                recordingStatus.innerHTML = '<p style="color: #4caf50;">Processing your response...</p>';
+            }
+        }
+        
+        async function processUserResponse(audioBlob) {
+            recordBtn.disabled = true;
+            progressIndicator.textContent = 'Analyzing your response...';
+            
+            try {
+                // Send audio for analysis
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'response.webm');
+                formData.append('part', currentPart);
+                if (currentTopic) {
+                    formData.append('topic', currentTopic);
+                }
+                formData.append('memory', JSON.stringify(conversationMemory));
+                
+                const response = await fetch('/analyze_ielts_response', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Update conversation memory
+                    conversationMemory = result.memory || conversationMemory;
+                    
+                    // Add user message
+                    addMessage('candidate', result.transcript);
+                    
+                    // Add feedback
+                    addMessage('feedback', null, {
+                        grammar: result.grammar_feedback_display || result.grammar_feedback,
+                        lexical: result.lexical_feedback
+                    });
+                    
+                    // Add pronunciation feedback if available
+                    if (result.pronunciation_feedback && result.pronunciation_feedback.length > 0) {
+                        addPronunciationFeedback(result.pronunciation_feedback);
+                    }
+                    
+                    // Add error clips section if available
+                    if (result.zip_url) {
+                        addErrorClipsSection(result.zip_url);
+                    }
+                    
+                    // Play grammar feedback as speech
+                    try {
+                        if (result.grammar_audio_chunks) {
+                            console.log(`Playing grammar feedback audio from chunks - ${result.grammar_audio_chunks.length} chunks`);
+                            
+                            // Create visible audio player for grammar feedback chunks
+                            const grammarPlayerDiv = document.createElement('div');
+                            grammarPlayerDiv.className = 'audio-player';
+                            grammarPlayerDiv.innerHTML = `
+                                <div class="message candidate-message">
+                                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="fas fa-volume-up" style="margin-right: 10px; color: #4caf50;"></i>
+                                        <strong>Grammar Feedback Audio (${result.grammar_audio_chunks.length} parts)</strong>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Create audio players for each chunk
+                            for (let i = 0; i < result.grammar_audio_chunks.length; i++) {
+                                const chunk = result.grammar_audio_chunks[i];
+                                
+                                // Convert base64 string back to blob
+                                const audioBytes = atob(chunk);
+                                const audioArray = new Uint8Array(audioBytes.length);
+                                for (let j = 0; j < audioBytes.length; j++) {
+                                    audioArray[j] = audioBytes.charCodeAt(j);
+                                }
+                                
+                                const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                                const audioUrl = URL.createObjectURL(audioBlob);
+                                
+                                const chunkDiv = document.createElement('div');
+                                chunkDiv.style.border = '1px solid #e9ecef';
+                                chunkDiv.style.borderRadius = '8px';
+                                chunkDiv.style.padding = '15px';
+                                chunkDiv.style.margin = '10px 0';
+                                chunkDiv.innerHTML = `
+                                    <div style="margin-bottom: 8px; font-weight: bold; color: #666;">
+                                        Part ${i + 1} of ${result.grammar_audio_chunks.length}
+                                    </div>
+                                    <audio controls style="width: 100%; height: 40px;">
+                                        <source src="${audioUrl}" type="audio/wav">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                `;
+                                
+                                grammarPlayerDiv.appendChild(chunkDiv);
+                            }
+                            
+                            // Add the audio player to the conversation
+                            conversationMessages.appendChild(grammarPlayerDiv);
+                            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                            
+                            // Auto-play the first chunk after 3 seconds
+                            setTimeout(() => {
+                                const firstAudioElement = grammarPlayerDiv.querySelector('audio');
+                                if (firstAudioElement) {
+                                    firstAudioElement.play().then(() => {
+                                        console.log('Grammar feedback audio chunk 1 auto-played successfully');
+                                    }).catch(error => {
+                                        console.error('Auto-play failed:', error);
+                                        console.log('User interaction required for audio playback');
+                                    });
+                                }
+                            }, 3000);
+                            
+                            console.log('Grammar feedback audio player created and auto-play scheduled');
+                        } else if (result.grammar_audio_blob) {
+                            console.log('Playing grammar feedback audio from blob');
+                            // Convert base64 string back to blob
+                            const audioBytes = atob(result.grammar_audio_blob);
+                            const audioArray = new Uint8Array(audioBytes.length);
+                            for (let i = 0; i < audioBytes.length; i++) {
+                                audioArray[i] = audioBytes.charCodeAt(i);
+                            }
+                            const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            
+                            // Create visible audio player for grammar feedback
+                            const grammarPlayerDiv = document.createElement('div');
+                            grammarPlayerDiv.className = 'audio-player';
+                            grammarPlayerDiv.innerHTML = `
+                                <div class="message candidate-message">
+                                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="fas fa-volume-up" style="margin-right: 10px; color: #4caf50;"></i>
+                                        <strong>Grammar Feedback Audio</strong>
+                                    </div>
+                                    <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                                        <audio controls style="width: 100%; height: 40px;">
+                                            <source src="${audioUrl}" type="audio/wav">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Add the audio player to the conversation
+                            conversationMessages.appendChild(grammarPlayerDiv);
+                            conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                            
+                            // Auto-play after 3 seconds
+                            setTimeout(() => {
+                                const audioElement = grammarPlayerDiv.querySelector('audio');
+                                if (audioElement) {
+                                    audioElement.play().then(() => {
+                                        console.log('Grammar feedback audio auto-played successfully');
+                                    }).catch(error => {
+                                        console.error('Auto-play failed:', error);
+                                        console.log('User interaction required for audio playback');
+                                    });
+                                }
+                            }, 3000);
+                            
+                            console.log('Grammar feedback audio player created and auto-play scheduled');
+                        } else {
+                            console.log('No grammar feedback audio available');
+                        }
+                    } catch (error) {
+                        console.error('Error creating grammar feedback audio player:', error);
+                        console.log('Grammar feedback audio failed, showing text only');
+                    }
+                    
+                    questionCount++;
+                    
+                    // Check if we've reached max questions for the part
+                    if (questionCount >= maxQuestions) {
+                        console.log('Reached max questions, ending conversation');
+                        setTimeout(() => {
+                            endConversation();
+                        }, 2000);
+                        return;
+                    }
+                    
+                    // Get next question after a delay
+                    setTimeout(async () => {
+                        console.log('Next question:', result.next_question);
+                        console.log('Result keys:', Object.keys(result));
+                        console.log('Next question audio blob:', result.next_question_audio_blob);
+                        
+                        if (result.next_question) {
+                            // Add next question text to conversation
+                            addMessage('examiner', result.next_question);
+                            
+                            // Add Best Answer button for the next question
+                            addBestAnswerButton(result.next_question);
+                            
+                            // Play next question as speech
+                            try {
+                                if (result.next_question_audio_chunks) {
+                                    console.log(`Playing next question audio from chunks - ${result.next_question_audio_chunks.length} chunks`);
+                                    
+                                    // Create visible audio player for next question chunks
+                                    const nextQuestionPlayerDiv = document.createElement('div');
+                                    nextQuestionPlayerDiv.className = 'audio-player';
+                                    nextQuestionPlayerDiv.innerHTML = `
+                                        <div class="message examiner-message">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="fas fa-volume-up" style="margin-right: 10px; color: #1976d2;"></i>
+                                                <strong>Next Question Audio (${result.next_question_audio_chunks.length} parts)</strong>
+                                            </div>
+                                        </div>
+                                    `;
+                                    
+                                    // Create audio players for each chunk
+                                    for (let i = 0; i < result.next_question_audio_chunks.length; i++) {
+                                        const chunk = result.next_question_audio_chunks[i];
+                                        
+                                        // Convert base64 string back to blob
+                                        const audioBytes = atob(chunk);
+                                        const audioArray = new Uint8Array(audioBytes.length);
+                                        for (let j = 0; j < audioBytes.length; j++) {
+                                            audioArray[j] = audioBytes.charCodeAt(j);
+                                        }
+                                        
+                                        const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                                        const audioUrl = URL.createObjectURL(audioBlob);
+                                        
+                                        const chunkDiv = document.createElement('div');
+                                        chunkDiv.style.border = '1px solid #e9ecef';
+                                        chunkDiv.style.borderRadius = '8px';
+                                        chunkDiv.style.padding = '15px';
+                                        chunkDiv.style.margin = '10px 0';
+                                        chunkDiv.innerHTML = `
+                                            <div style="margin-bottom: 8px; font-weight: bold; color: #666;">
+                                                Part ${i + 1} of ${result.next_question_audio_chunks.length}
+                                            </div>
+                                            <audio controls style="width: 100%; height: 40px;">
+                                                <source src="${audioUrl}" type="audio/wav">
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        `;
+                                        
+                                        nextQuestionPlayerDiv.appendChild(chunkDiv);
+                                    }
+                                    
+                                    // Add the audio player to the conversation
+                                    conversationMessages.appendChild(nextQuestionPlayerDiv);
+                                    conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                                    
+                                    // Auto-play the first chunk after 3 seconds
+                                    setTimeout(() => {
+                                        const firstAudioElement = nextQuestionPlayerDiv.querySelector('audio');
+                                        if (firstAudioElement) {
+                                            firstAudioElement.play().then(() => {
+                                                console.log('Next question audio chunk 1 auto-played successfully');
+                                            }).catch(error => {
+                                                console.error('Auto-play failed:', error);
+                                                console.log('User interaction required for audio playback');
+                                            });
+                                        }
+                                    }, 3000);
+                                    
+                                    console.log('Next question audio player created and auto-play scheduled');
+                                } else if (result.next_question_audio_blob) {
+                                    console.log('Playing next question audio from blob');
+                                    // Convert base64 string back to blob
+                                    const audioBytes = atob(result.next_question_audio_blob);
+                                    const audioArray = new Uint8Array(audioBytes.length);
+                                    for (let i = 0; i < audioBytes.length; i++) {
+                                        audioArray[i] = audioBytes.charCodeAt(i);
+                                    }
+                                    const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+                                    const audioUrl = URL.createObjectURL(audioBlob);
+                                    
+                                    // Create visible audio player for next question
+                                    const nextQuestionPlayerDiv = document.createElement('div');
+                                    nextQuestionPlayerDiv.className = 'audio-player';
+                                    nextQuestionPlayerDiv.innerHTML = `
+                                        <div class="message examiner-message">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="fas fa-volume-up" style="margin-right: 10px; color: #1976d2;"></i>
+                                                <strong>Next Question Audio</strong>
+                                            </div>
+                                            <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 10px 0;">
+                                                <audio controls style="width: 100%; height: 40px;">
+                                                    <source src="${audioUrl}" type="audio/wav">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        </div>
+                                    `;
+                                    
+                                    // Add the audio player to the conversation
+                                    conversationMessages.appendChild(nextQuestionPlayerDiv);
+                                    conversationMessages.scrollTop = conversationMessages.scrollHeight;
+                                    
+                                    // Auto-play after 3 seconds
+                                    setTimeout(() => {
+                                        const audioElement = nextQuestionPlayerDiv.querySelector('audio');
+                                        if (audioElement) {
+                                            audioElement.play().then(() => {
+                                                console.log('Next question audio auto-played successfully');
+                                            }).catch(error => {
+                                                console.error('Auto-play failed:', error);
+                                                console.log('User interaction required for audio playback');
+                                            });
+                                        }
+                                    }, 3000);
+                                    
+                                    console.log('Next question audio player created and auto-play scheduled');
+                                } else {
+                                    console.log('No next question audio available');
+                                }
+                            } catch (error) {
+                                console.error('Error creating next question audio player:', error);
+                                console.log('Next question audio failed, showing text only');
+                            }
+                            
+                            // Enable recording for next response
+                            recordBtn.disabled = false;
+                            progressIndicator.textContent = `Question ${questionCount + 1} of ${maxQuestions}`;
+                            recordingInstruction.textContent = 'Click to record your response';
+                        } else {
+                            console.log('No next question, ending conversation');
+                            // End of conversation
+                            endConversation();
+                        }
+                    }, 3000);
+                    
+                } else {
+                    throw new Error('Analysis failed');
+                }
+            } catch (error) {
+                console.error('Error processing response:', error);
+                recordingStatus.innerHTML = '<p class="error">Error analyzing response. Please try again.</p>';
+                recordBtn.disabled = false;
+            }
+        }
+        
+        function endConversation() {
+            let endMessage = 'Thank you for completing the IELTS Speaking practice. You have done well!';
+            
+            if (currentPart === 1) {
+                endMessage = 'Part 1 completed! You have successfully answered all 12 questions. The session will now close.';
+            } else if (currentPart === 2) {
+                endMessage = 'Part 2 completed! You have finished the long turn speaking task.';
+            } else if (currentPart === 3) {
+                endMessage = 'Part 3 completed! You have finished the discussion section with all 8 questions.';
+            }
+            
+            addMessage('examiner', endMessage);
+            recordBtn.disabled = true;
+            progressIndicator.textContent = 'Practice completed';
+            recordingInstruction.textContent = 'Practice session ended';
+            
+            // Disable the end button since session is already ended
+            endBtn.disabled = true;
+        }
+    </script>
+</body>
+</html> 

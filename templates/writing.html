@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenIELTS - Writing</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    .task-toggle {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+        gap: 0;
+    }
+    .task-btn {
+        font-size: 1.18rem;
+        font-weight: 700;
+        padding: 18px 44px;
+        border: none;
+        border-radius: 32px;
+        background: #232526;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        margin: 0;
+        outline: none;
+    }
+    .task-btn.selected {
+        background: #fff;
+        color: #181c2f;
+        box-shadow: 0 2px 12px rgba(24,28,47,0.13);
+    }
+    .task-btn:first-child {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .task-btn:last-child {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    </style>
+    <script>
+    function selectTask(task) {
+        document.getElementById('task1-btn').classList.remove('selected');
+        document.getElementById('task2-btn').classList.remove('selected');
+        document.getElementById('task'+task+'-btn').classList.add('selected');
+        document.getElementById('task2-form').style.display = (task === '2') ? 'block' : 'none';
+        document.getElementById('task1-message').style.display = (task === '1') ? 'block' : 'none';
+        // Set the task box background and text color
+        var taskBox = document.getElementById('task-box');
+        if (taskBox) {
+            taskBox.style.background = '#181c2f';
+            taskBox.style.color = '#fff';
+        }
+    }
+    
+    // Handle form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.writing-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackContent = document.getElementById('feedback-content');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const topic = document.getElementById('topic').value.trim();
+            const essay = document.getElementById('essay').value.trim();
+            
+            if (!topic || !essay) {
+                alert('Please fill in both topic and essay fields.');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Evaluating...';
+            feedbackContainer.style.display = 'none';
+            
+            // Show loading indicator
+            const loadingContainer = document.getElementById('loading-container');
+            loadingContainer.style.display = 'block';
+            
+            try {
+                const response = await fetch('/evaluate_writing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: topic,
+                        essay: essay
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Display feedback
+                    feedbackContent.innerHTML = `
+                        <div style="text-align: left; max-width: 100%;">
+                            <h3 style="color: #4caf50; margin-bottom: 15px;">📝 Writing Evaluation</h3>
+                            <div style="background: rgba(76,175,80,0.2); padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">
+                                <div style="white-space: pre-wrap; line-height: 1.6; color: #fff;">${data.feedback}</div>
+                            </div>
+                            <div style="margin-top: 20px; text-align: center;">
+                                <button onclick="resetForm()" style="background: #1976d2; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    <i class="fas fa-plus" style="margin-right: 8px;"></i>
+                                    Try Another Essay
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    feedbackContainer.style.display = 'block';
+                    
+                    // Auto-scroll to feedback
+                    feedbackContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // Hide the form after successful evaluation
+                    const taskBox = document.getElementById('task-box');
+                    if (taskBox) {
+                        taskBox.style.display = 'none';
+                    }
+                    
+                } else {
+                    const errorData = await response.text();
+                    console.error('Evaluation error:', errorData);
+                    feedbackContent.innerHTML = `
+                        <div style="color: #ff6b6b;">
+                            <strong>Error:</strong> Failed to evaluate essay. Please try again.
+                        </div>
+                    `;
+                    feedbackContainer.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                feedbackContent.innerHTML = `
+                    <div style="color: #ff6b6b;">
+                        <strong>Error:</strong> Network error. Please check your connection and try again.
+                    </div>
+                `;
+                feedbackContainer.style.display = 'block';
+                            } finally {
+                    // Hide loading indicator
+                    loadingContainer.style.display = 'none';
+                    
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Essay';
+                }
+        });
+    });
+    
+    window.onload = function() { selectTask('2'); };
+    
+    function resetForm() {
+        // Clear form fields
+        document.getElementById('topic').value = '';
+        document.getElementById('essay').value = '';
+        
+        // Show the form again
+        const taskBox = document.getElementById('task-box');
+        if (taskBox) {
+            taskBox.style.display = 'flex';
+        }
+        
+        // Hide feedback
+        const feedbackContainer = document.getElementById('feedback-container');
+        feedbackContainer.style.display = 'none';
+        
+        // Reset button
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Essay';
+    }
+    </script>
+</head>
+<body>
+    <div class="header" style="display:flex;align-items:center;justify-content:center;">
+        <a href="/" class="brand" style="text-decoration:none;color:#2029d9;font-weight:700;">GenIELTS</a>
+    </div>
+    <div class="chat-container fullpage" style="margin-top:48px; overflow-y: auto; max-height: calc(100vh - 48px);">
+        <div class="chat-window">
+            <div class="chat-bubble bot">
+                <span class="icon"><i class="fas fa-pen-nib"></i></span>
+                <span class="bot-label">Choose your writing task and submit your essay for instant feedback.</span>
+            </div>
+            <div class="chat-bubble user" style="padding:0;">
+                <div id="task-box" style="min-height:320px;max-width:800px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    <form class="writing-form" style="margin:0;display:flex;flex-direction:column;gap:12px;width:100%;">
+                        <div class="task-toggle">
+                            <button type="button" id="task1-btn" class="task-btn" onclick="selectTask('1')">Task 1</button>
+                            <button type="button" id="task2-btn" class="task-btn" onclick="selectTask('2')">Task 2</button>
+                        </div>
+                        <div style="flex:1;width:100%;display:flex;align-items:center;justify-content:center;">
+                            <div id="task1-message" style="display:none;width:100%;font-weight:600;font-size:1.2rem;text-align:center;padding:48px 48px 48px 48px;border-radius:14px;box-shadow:0 2px 8px rgba(25,118,210,0.10);min-height:240px;display:flex;align-items:center;justify-content:center;">Task 1 will be available soon.</div>
+                            <div id="task2-form" style="display:block;width:100%;padding:48px 48px 48px 48px;border-radius:14px;box-shadow:0 2px 8px rgba(25,118,210,0.10);min-height:240px;">
+                                <label for="topic" style="color:#fff;">Essay Topic:</label>
+                                <input type="text" id="topic" name="topic" placeholder="Enter your essay topic..." style="margin-bottom:12px;">
+                                <label for="essay" style="color:#fff;">Your Essay:</label>
+                                <textarea id="essay" name="essay" rows="8" placeholder="Write your essay here..." style="margin-bottom:12px;"></textarea>
+                                <button type="submit" id="submit-btn">Submit Essay</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="chat-bubble bot" id="feedback-container" style="display: none;">
+                <span class="icon"><i class="fas fa-pen-nib"></i></span>
+                <span class="bot-label" id="feedback-content">Model feedback will appear here.</span>
+            </div>
+            <div class="chat-bubble bot" id="loading-container" style="display: none;">
+                <span class="icon"><i class="fas fa-spinner fa-spin"></i></span>
+                <span class="bot-label">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-cog fa-spin" style="color: #1976d2;"></i>
+                        <span>Evaluating your essay...</span>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #888;">
+                        Analyzing grammar, vocabulary, coherence, and task achievement...
+                    </div>
+                </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

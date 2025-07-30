@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenIELTS - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <span class="brand">GenIELTS</span>
+    </div>
+    <div class="home-container">
+        <header>
+            <h1 class="brand">GenIELTS</h1>
+            <p class="subtitle">Generative IELTS Exam Practice Platform</p>
+        </header>
+        <hr class="section-divider" />
+        <div class="modules">
+            <a href="/speaking" class="module-card speaking">
+                <i class="fas fa-microphone" style="font-size:1.7rem;"></i>
+                <h2>Speaking</h2>
+                <p>Practice your speaking by talking to GenIELTS and get instant feedback.</p>
+            </a>
+            <a href="/listening" class="module-card listening">
+                <i class="fas fa-headphones" style="font-size:1.7rem;"></i>
+                <h2>Listening</h2>
+                <p>Choose the part and topic of the listening exam you want to practice.</p>
+            </a>
+            <a href="/writing" class="module-card writing">
+                <i class="fas fa-pen-nib" style="font-size:1.7rem;"></i>
+                <h2>Writing</h2>
+                <p>Submit your Task 2 essay and receive feedback. (Task 1 coming soon!)</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html> 

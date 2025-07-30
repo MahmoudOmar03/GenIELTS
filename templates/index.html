@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container fullpage">
+        <div class="chat-window">
+            <!-- User message (audio upload) -->
+            <div class="chat-bubble user">
+                <span class="audio-label">You sent an audio message</span>
+            </div>
+            <!-- Placeholder for future response -->
+            <div class="chat-bubble bot">
+                <span class="icon"><i class="fas fa-user-tie"></i></span>
+                <span class="bot-label">GenIELTS will respond here</span>
+            </div>
+        </div>
+        <form class="chat-input mic-only" action="/upload" method="post" enctype="multipart/form-data">
+            <button type="submit" class="mic-btn" title="Record Voice">
+                <i class="fas fa-microphone"></i>
+            </button>
+        </form>
+    </div>
+</body>
+</html> 
